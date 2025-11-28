@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var locations = [Location]()
+    @State private var selectedLocation: Location?
     
     let startPosition = MapCameraPosition.region(
         MKCoordinateRegion(
@@ -29,6 +30,9 @@ struct ContentView: View {
                             .frame(width: 44, height: 44)
                             .background(.white)
                             .clipShape(.circle)
+                            .onLongPressGesture(minimumDuration: 0.2) {
+                                selectedLocation = location
+                            }
                     }
                 }
             }
@@ -36,6 +40,13 @@ struct ContentView: View {
                 if let coordinate = proxy.convert(position, from: .local) {
                     let newLocation = Location(id: UUID(), name: "New location", description: "", latitude: coordinate.latitude, longitude: coordinate.longitude)
                     locations.append(newLocation)
+                }
+            }
+            .sheet(item: $selectedLocation) { location in
+                EditLocationView(location: location) { newLocation in
+                    if let index = locations.firstIndex(of: location) {
+                        locations[index] = newLocation
+                    }
                 }
             }
         }
