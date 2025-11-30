@@ -19,32 +19,43 @@ struct ContentView: View {
     )
     
     var body: some View {
-        MapReader { proxy in
-            Map(initialPosition: startPosition) {
-                ForEach(vm.locations) { location in
-                    Annotation(location.name, coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)) {
-                        Image(systemName: "star.circle")
-                            .resizable()
-                            .foregroundStyle(.red)
-                            .frame(width: 44, height: 44)
-                            .background(.white)
-                            .clipShape(.circle)
-                            .onLongPressGesture(minimumDuration: 0.2) {
-                                vm.selectedLocation = location
+        NavigationStack {
+            if vm.isUnlocked {
+                MapReader { proxy in
+                    Map(initialPosition: startPosition) {
+                        ForEach(vm.locations) { location in
+                            Annotation(location.name, coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)) {
+                                Image(systemName: "star.circle")
+                                    .resizable()
+                                    .foregroundStyle(.red)
+                                    .frame(width: 44, height: 44)
+                                    .background(.white)
+                                    .clipShape(.circle)
+                                    .onLongPressGesture(minimumDuration: 0.2) {
+                                        vm.selectedLocation = location
+                                    }
                             }
+                        }
+                    }
+                    .onTapGesture { position in
+                        if let coordinate = proxy.convert(position, from: .local) {
+                            vm.addLocation(at: coordinate)
+                        }
+                    }
+                    .sheet(item: $vm.selectedLocation) { location in
+                        EditLocationView(location: location) {
+                            vm.update(location: $0)
+                        }
                     }
                 }
+            } else {
+                Map(initialPosition: startPosition)
+                    .toolbar {
+                        Button("Unlock Places", action: vm.authenticate)
+                            .buttonStyle(.borderedProminent)
+                    }
             }
-            .onTapGesture { position in
-                if let coordinate = proxy.convert(position, from: .local) {
-                    vm.addLocation(at: coordinate)
-                }
-            }
-            .sheet(item: $vm.selectedLocation) { location in
-                EditLocationView(location: location) {
-                    vm.update(location: $0)
-                }
-            }
+            
         }
     }
 }
