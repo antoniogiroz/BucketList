@@ -9,8 +9,7 @@ import MapKit
 import SwiftUI
 
 struct ContentView: View {
-    @State private var locations = [Location]()
-    @State private var selectedLocation: Location?
+    @State private var vm = ViewModel()
     
     let startPosition = MapCameraPosition.region(
         MKCoordinateRegion(
@@ -22,7 +21,7 @@ struct ContentView: View {
     var body: some View {
         MapReader { proxy in
             Map(initialPosition: startPosition) {
-                ForEach(locations) { location in
+                ForEach(vm.locations) { location in
                     Annotation(location.name, coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)) {
                         Image(systemName: "star.circle")
                             .resizable()
@@ -31,22 +30,19 @@ struct ContentView: View {
                             .background(.white)
                             .clipShape(.circle)
                             .onLongPressGesture(minimumDuration: 0.2) {
-                                selectedLocation = location
+                                vm.selectedLocation = location
                             }
                     }
                 }
             }
             .onTapGesture { position in
                 if let coordinate = proxy.convert(position, from: .local) {
-                    let newLocation = Location(id: UUID(), name: "New location", description: "", latitude: coordinate.latitude, longitude: coordinate.longitude)
-                    locations.append(newLocation)
+                    vm.addLocation(at: coordinate)
                 }
             }
-            .sheet(item: $selectedLocation) { location in
-                EditLocationView(location: location) { newLocation in
-                    if let index = locations.firstIndex(of: location) {
-                        locations[index] = newLocation
-                    }
+            .sheet(item: $vm.selectedLocation) { location in
+                EditLocationView(location: location) {
+                    vm.update(location: $0)
                 }
             }
         }
