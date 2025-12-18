@@ -35,11 +35,7 @@ struct EditLocationView: View {
                     switch loadingState {
                     case .loaded:
                         ForEach(pages, id: \.pageid) { page in
-                            Text(page.title)
-                                .font(.headline)
-                            + Text(": ") +
-                            Text(page.description)
-                                .italic()
+                            Text("**\(page.title)**: *\(page.description)*")                            
                         }
                     case .loading:
                         Text("Loading…")
